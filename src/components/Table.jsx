@@ -1,9 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
+import StarWarContext from '../context/StarWarContext';
 
 const ENDPOINT = 'https://swapi-trybe.herokuapp.com/api/planets/';
 
 function Table() {
   const [planetsInfo, setPlanetsInfo] = useState([]);
+
+  const { filterName } = useContext(StarWarContext);
+  const { filterByName } = filterName;
+  const { name: inputName } = filterByName;
 
   useEffect(() => {
     const getPlanetsList = async () => {
@@ -14,6 +19,10 @@ function Table() {
   }, []);
 
   const { results } = planetsInfo;
+
+  // const planetFiltered = results.filter((planet) => planet.name.includes(inputName));
+  // console.log(planetFiltered);
+
   return (
     <div>
       <table>
@@ -35,23 +44,24 @@ function Table() {
           </tr>
         </thead>
         <tbody>
-          { results && results.map((planet, index) => (
-            <tr key={ index }>
-              <td>{planet.name}</td>
-              <td>{planet.rotation_period}</td>
-              <td>{planet.orbital_period}</td>
-              <td>{planet.diameter}</td>
-              <td>{planet.climate}</td>
-              <td>{planet.gravity}</td>
-              <td>{planet.terrain}</td>
-              <td>{planet.surface_water}</td>
-              <td>{planet.population}</td>
-              <td>{planet.films}</td>
-              <td>{planet.created}</td>
-              <td>{planet.edited}</td>
-              <td>{planet.url}</td>
-            </tr>
-          )) }
+          { results && results
+            .filter((planet) => planet.name.includes(inputName)).map((planet, index) => (
+              <tr key={ index }>
+                <td>{planet.name}</td>
+                <td>{planet.rotation_period}</td>
+                <td>{planet.orbital_period}</td>
+                <td>{planet.diameter}</td>
+                <td>{planet.climate}</td>
+                <td>{planet.gravity}</td>
+                <td>{planet.terrain}</td>
+                <td>{planet.surface_water}</td>
+                <td>{planet.population}</td>
+                <td>{planet.films}</td>
+                <td>{planet.created}</td>
+                <td>{planet.edited}</td>
+                <td>{planet.url}</td>
+              </tr>
+            )) }
         </tbody>
       </table>
 
