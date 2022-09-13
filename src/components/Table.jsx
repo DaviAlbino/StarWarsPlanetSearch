@@ -9,22 +9,84 @@ function Table() {
   const { filterName } = useContext(StarWarContext);
   const { filterByName } = filterName;
   const { name: inputName } = filterByName;
+  const [filterPlanet, setFilterPlanet] = useState({
+    coluna: 'population',
+    operador: 'maior que',
+    valor: 0,
+  });
+  const { coluna, operador, valor } = filterPlanet;
 
   useEffect(() => {
     const getPlanetsList = async () => {
       const data = await fetch(ENDPOINT).then((response) => response.json());
-      setPlanetsInfo(data);
+      setPlanetsInfo(data.results);
     };
     getPlanetsList();
   }, []);
 
-  const { results } = planetsInfo;
+  // console.log(data);
 
-  // const planetFiltered = results.filter((planet) => planet.name.includes(inputName));
-  // console.log(planetFiltered);
+  function handleFilterPlanet({ target }) {
+    const { value, name } = target;
+    setFilterPlanet({ ...filterPlanet, [name]: value });
+  }
+
+  function filterSelector() {
+    const result = planetsInfo.filter((planet) => {
+      if (operador === 'maior que') {
+        return Number(planet[coluna]) > Number(valor);
+      }
+      if (operador === 'menor que') {
+        return Number(planet[coluna]) < Number(valor);
+      }
+      if (operador === 'igual a') {
+        return Number(planet[coluna]) === Number(valor);
+      }
+      return planet;
+    });
+    setPlanetsInfo(result);
+  }
 
   return (
     <div>
+      <label htmlFor="filterPlanet">
+        <select
+          data-testid="column-filter"
+          value={ coluna }
+          name="coluna"
+          onChange={ handleFilterPlanet }
+        >
+          <option>population</option>
+          <option>orbital_period</option>
+          <option>diameter</option>
+          <option>rotation_period</option>
+          <option>surface_water</option>
+        </select>
+        <select
+          data-testid="comparison-filter"
+          value={ operador }
+          name="operador"
+          onChange={ handleFilterPlanet }
+        >
+          <option value="maior que">maior que</option>
+          <option value="menor que">menor que</option>
+          <option value="igual a">igual a</option>
+        </select>
+        <input
+          data-testid="value-filter"
+          name="valor"
+          type="number"
+          value={ valor }
+          onChange={ handleFilterPlanet }
+        />
+        <button
+          data-testid="button-filter"
+          type="button"
+          onClick={ filterSelector }
+        >
+          Filtrar
+        </button>
+      </label>
       <table>
         <thead>
           <tr>
@@ -44,7 +106,7 @@ function Table() {
           </tr>
         </thead>
         <tbody>
-          { results && results
+          { planetsInfo && planetsInfo
             .filter((planet) => planet.name.includes(inputName)).map((planet, index) => (
               <tr key={ index }>
                 <td>{planet.name}</td>
