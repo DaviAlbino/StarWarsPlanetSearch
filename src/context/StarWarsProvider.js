@@ -9,6 +9,14 @@ function StarWarsProvider({ children }) {
     },
   });
 
+  const [columnsOptions, setColumnsOptions] = useState([
+    'population',
+    'orbital_period',
+    'diameter',
+    'rotation_period',
+    'surface_water',
+  ]);
+
   const handleChange = ({ target }) => {
     const { value } = target;
     setFilterName({
@@ -19,7 +27,14 @@ function StarWarsProvider({ children }) {
   };
 
   return (
-    <StarWarContext.Provider value={ { filterName, handleChange } }>
+    <StarWarContext.Provider
+      value={ {
+        filterName,
+        handleChange,
+        columnsOptions,
+        setColumnsOptions,
+      } }
+    >
       {children}
     </StarWarContext.Provider>
   );

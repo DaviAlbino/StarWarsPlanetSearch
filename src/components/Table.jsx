@@ -6,7 +6,7 @@ const ENDPOINT = 'https://swapi-trybe.herokuapp.com/api/planets/';
 function Table() {
   const [planetsInfo, setPlanetsInfo] = useState([]);
 
-  const { filterName } = useContext(StarWarContext);
+  const { filterName, columnsOptions, setColumnsOptions } = useContext(StarWarContext);
   const { filterByName } = filterName;
   const { name: inputName } = filterByName;
   const [filterPlanet, setFilterPlanet] = useState({
@@ -45,6 +45,8 @@ function Table() {
       return planet;
     });
     setPlanetsInfo(result);
+    const newColumnFilter = columnsOptions.filter((column) => column !== coluna);
+    setColumnsOptions(newColumnFilter);
   }
 
   return (
@@ -56,11 +58,9 @@ function Table() {
           name="coluna"
           onChange={ handleFilterPlanet }
         >
-          <option>population</option>
-          <option>orbital_period</option>
-          <option>diameter</option>
-          <option>rotation_period</option>
-          <option>surface_water</option>
+          { columnsOptions.map((option, index) => (
+            <option key={ index }>{ option }</option>
+          )) }
         </select>
         <select
           data-testid="comparison-filter"
