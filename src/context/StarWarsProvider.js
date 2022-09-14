@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Proptypes from 'prop-types';
 import StarWarContext from './StarWarContext';
 
+const ENDPOINT = 'https://swapi-trybe.herokuapp.com/api/planets/';
+
 function StarWarsProvider({ children }) {
+  const [planetsInfo, setPlanetsInfo] = useState([]);
+
   const [filterName, setFilterName] = useState({
     filterByName: {
       name: '',
     },
+  });
+
+  const [filterPlanet, setFilterPlanet] = useState({
+    coluna: 'population',
+    operador: 'maior que',
+    valor: 0,
   });
 
   const [columnsOptions, setColumnsOptions] = useState([
@@ -26,6 +36,14 @@ function StarWarsProvider({ children }) {
     });
   };
 
+  useEffect(() => {
+    const getPlanetsList = async () => {
+      const data = await fetch(ENDPOINT).then((response) => response.json());
+      setPlanetsInfo(data.results);
+    };
+    getPlanetsList();
+  }, []);
+
   return (
     <StarWarContext.Provider
       value={ {
@@ -33,6 +51,10 @@ function StarWarsProvider({ children }) {
         handleChange,
         columnsOptions,
         setColumnsOptions,
+        planetsInfo,
+        setPlanetsInfo,
+        filterPlanet,
+        setFilterPlanet,
       } }
     >
       {children}

@@ -1,52 +1,124 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import StarWarContext from '../context/StarWarContext';
 
-const ENDPOINT = 'https://swapi-trybe.herokuapp.com/api/planets/';
-
 function Table() {
-  const [planetsInfo, setPlanetsInfo] = useState([]);
+  const { filterName,
+    columnsOptions,
+    setColumnsOptions,
+    planetsInfo,
+    setPlanetsInfo,
+    filterPlanet,
+    setFilterPlanet,
+  } = useContext(StarWarContext);
 
-  const { filterName, columnsOptions, setColumnsOptions } = useContext(StarWarContext);
+  const [showFilters, setShowFilters] = useState([]);
+
   const { filterByName } = filterName;
   const { name: inputName } = filterByName;
-  const [filterPlanet, setFilterPlanet] = useState({
-    coluna: 'population',
-    operador: 'maior que',
-    valor: 0,
-  });
-  const { coluna, operador, valor } = filterPlanet;
-
-  useEffect(() => {
-    const getPlanetsList = async () => {
-      const data = await fetch(ENDPOINT).then((response) => response.json());
-      setPlanetsInfo(data.results);
-    };
-    getPlanetsList();
-  }, []);
-
-  // console.log(data);
 
   function handleFilterPlanet({ target }) {
     const { value, name } = target;
     setFilterPlanet({ ...filterPlanet, [name]: value });
   }
 
+  // function filterSelector() {
+  //   const { coluna, operador, valor } = filterPlanet;
+  //   // const result = planetsInfo.filter((planet) => {
+  //   //   if (operador === 'maior que') {
+  //   //     return Number(planet[coluna]) > Number(valor);
+  //   //   }
+  //   //   if (operador === 'menor que') {
+  //   //     return Number(planet[coluna]) < Number(valor);
+  //   //   }
+  //   //   if (operador === 'igual a') {
+  //   //     return Number(planet[coluna]) === Number(valor);
+  //   //   }
+  //   //   // return planet[coluna];
+  //   //   // return planet[coluna];
+  //   // });
+
+  //   const result = planetsInfo.filter((planet) => {
+  //     if (operador === 'maior que') {
+  //       return Number(planet[coluna]) > Number(valor);
+  //     }
+  //     if (operador === 'menor que') {
+  //       return Number(planet[coluna]) < Number(valor);
+  //     }
+  //     if (operador === 'igual a') {
+  //       return Number(planet[coluna]) === Number(valor);
+  //     }
+  //     // return planet[coluna];
+  //     // return planet[coluna];
+  //   });
+  //   setPlanetsInfo(result);
+  //   const newColumnFilter = columnsOptions.filter((column) => column !== coluna);
+  //   setFilterPlanet({ ...filterPlanet, coluna: newColumnFilter[0] });
+  //   setColumnsOptions(newColumnFilter);
+  //   setShowFilters([...showFilters, filterPlanet]);
+  // }
+
   function filterSelector() {
+    const { coluna, operador, valor } = filterPlanet;
     const result = planetsInfo.filter((planet) => {
+      let data;
       if (operador === 'maior que') {
-        return Number(planet[coluna]) > Number(valor);
+        data = Number(planet[coluna]) > Number(valor);
       }
       if (operador === 'menor que') {
-        return Number(planet[coluna]) < Number(valor);
+        data = Number(planet[coluna]) < Number(valor);
       }
       if (operador === 'igual a') {
-        return Number(planet[coluna]) === Number(valor);
+        data = Number(planet[coluna]) === Number(valor);
       }
-      return planet;
+      return data;
+      // return planet[coluna];
     });
+
     setPlanetsInfo(result);
     const newColumnFilter = columnsOptions.filter((column) => column !== coluna);
+    setFilterPlanet({ ...filterPlanet, coluna: newColumnFilter[0] });
     setColumnsOptions(newColumnFilter);
+    setShowFilters([...showFilters, filterPlanet]);
+  }
+
+  async function deleteFilter(col) {
+    const ENDPOINT = 'https://swapi-trybe.herokuapp.com/api/planets/';
+    const data = await fetch(ENDPOINT).then((response) => response.json());
+    let global = data.results;
+
+    const newShowFilters = showFilters.filter((option) => option.coluna !== col);
+    setColumnsOptions([...columnsOptions, col]);
+    setShowFilters(newShowFilters);
+
+    newShowFilters.forEach((show) => {
+      const { coluna, operador, valor } = show;
+      if (operador === 'maior que') {
+        global = global.filter((info) => info[coluna] > Number(valor));
+      }
+      if (operador === 'menor que') {
+        global = global.filter((info) => info[coluna] < Number(valor));
+      }
+      if (operador === 'igual a') {
+        global = global.filter((info) => info[coluna] === Number(valor));
+      }
+    });
+    setPlanetsInfo(global);
+    console.log('li', planetsInfo);
+  }
+
+  async function deleteAll() {
+    const ENDPOINT = 'https://swapi-trybe.herokuapp.com/api/planets/';
+    const data = await fetch(ENDPOINT).then((response) => response.json());
+    setPlanetsInfo(data.results);
+    setShowFilters([]);
+    setColumnsOptions([
+      'population',
+      'orbital_period',
+      'diameter',
+      'rotation_period',
+      'surface_water',
+    ]);
+    console.log('pl', planetsInfo);
   }
 
   return (
@@ -54,7 +126,7 @@ function Table() {
       <label htmlFor="filterPlanet">
         <select
           data-testid="column-filter"
-          value={ coluna }
+          value={ filterPlanet.coluna }
           name="coluna"
           onChange={ handleFilterPlanet }
         >
@@ -64,7 +136,7 @@ function Table() {
         </select>
         <select
           data-testid="comparison-filter"
-          value={ operador }
+          value={ filterPlanet.operador }
           name="operador"
           onChange={ handleFilterPlanet }
         >
@@ -76,7 +148,7 @@ function Table() {
           data-testid="value-filter"
           name="valor"
           type="number"
-          value={ valor }
+          value={ filterPlanet.valor }
           onChange={ handleFilterPlanet }
         />
         <button
@@ -87,6 +159,26 @@ function Table() {
           Filtrar
         </button>
       </label>
+      { showFilters && showFilters.map((myFilter, index) => (
+        <span data-testid="filter" key={ index }>
+          { myFilter.coluna }
+          { myFilter.operador }
+          { myFilter.valor }
+          <button
+            type="button"
+            onClick={ () => deleteFilter(myFilter.coluna) }
+          >
+            Apagar
+          </button>
+        </span>
+      )) }
+      <button
+        type="button"
+        data-testid="button-remove-filters"
+        onClick={ deleteAll }
+      >
+        Remover filtros
+      </button>
       <table>
         <thead>
           <tr>
@@ -108,7 +200,7 @@ function Table() {
         <tbody>
           { planetsInfo && planetsInfo
             .filter((planet) => planet.name.includes(inputName)).map((planet, index) => (
-              <tr key={ index }>
+              <tr key={ index } data-testid="table-read">
                 <td>{planet.name}</td>
                 <td>{planet.rotation_period}</td>
                 <td>{planet.orbital_period}</td>
